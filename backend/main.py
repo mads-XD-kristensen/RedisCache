@@ -5,7 +5,8 @@ import pandas as pd
 app = FastAPI()
 
 NEOURL = "neo4j://localhost:7687"
-
+NEOUSER = "neo4j"
+NEOPASS = "12345678"
 """MATCH (a:Stop), (b:Stop)
 WHERE a.name = "Bergen St" AND b.name = "Wall St"
 WITH a,b
@@ -29,7 +30,7 @@ def search(start: str, stop: str):
     if output: #Hvis redis allerede har en cachet route
         return {output}
     else:
-        gds = GraphDataScience(NEOURL, auth=("neo4j", "12345678"), database="neo4j")
+        gds = GraphDataScience(NEOURL, auth=(NEOUSER, NEOPASS), database="neo4j")
         cypher_query = """
         MATCH (a:Stop), (b:Stop)
         WHERE a.name = '{rstart}' AND b.name = '{rstop}'
