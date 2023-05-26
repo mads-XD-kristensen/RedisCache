@@ -37,15 +37,19 @@ def search(start: str, stop: str):
         WITH a,b
         MATCH p = allshortestpaths((a)-[*]-(b))  
         WHERE NONE (x IN RELATIONSHIPS(p) WHERE type(x)='OPERATES')  
-        RETURN p LIMIT 1
+        RETURN nodes(p) LIMIT 1
         """.format(rstart=start, rstop=stop)
         print(cypher_query)
-        
+        #cypher_query = """
+        #MATCH (a:Stop), (b:Stop)
+        #WHERE a.name = 'Bergen St' AND b.name = 'Wall St'
+        #RETURN * LIMIT 1
+        #"""
         output = gds.run_cypher(cypher_query) # Hent fra database her og put i cache
         print(output)
         print("\n")
-        #df = pd.DataFrame(output, columns=output.p)
-        #print(df)
+        df = pd.DataFrame(output)#, columns=output
+        print(df.to_string())
         gds.close()
         #r.set(route, "output", 600) #cache i redis db med den søgte route som key og selve routen som value, bliver i redis db i 10 min
         return {"output", "Route was not in cache but was in db, is now in cache for 10 min"} #placeholder
