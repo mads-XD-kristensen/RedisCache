@@ -50,7 +50,7 @@ def search(start: str, stop: str):
                     #print(str(full_route))
                 
                 full_route_string = str(full_route)
-                r.set(route, full_route_string, 60) #cache i redis db med den søgte route som key og selve routen som value, bliver i redis db i 10 min
+                r.set(route, full_route_string, 600) #cache i redis db med den søgte route som key og selve routen som value, bliver i redis db i 10 min
 
             else:
                 output = "No route exists"
