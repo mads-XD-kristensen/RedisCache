@@ -3,3 +3,4 @@ uvicorn
 redis
 graphdatascience
 pandas
+neo4j
