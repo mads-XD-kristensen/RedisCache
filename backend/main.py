@@ -29,7 +29,7 @@ def search(start: str, stop: str):
     output = r.get(route) #Henter route i redis db
 
     if output: #Hvis redis allerede har en cachet route
-        return {output}
+        return {route, output}
     else:
         with gd.driver(NEOURL, auth=(NEOUSER, NEOPASS)) as driver:
             driver.verify_connectivity()
@@ -45,12 +45,11 @@ def search(start: str, stop: str):
                     output = output["nodes(p)"]
 
                 for route_stop in output: #Dette for-loop er for at gå igennem den liste af dictionary og hente values ud
-                    
-                    full_route.append(route_stop.items())
+                    full_route.append(list(route_stop.values())[0])
                     #print(str(full_route))
-                
+                print(full_route)
                 full_route_string = str(full_route)
-                r.set(route, full_route_string, 600) #cache i redis db med den søgte route som key og selve routen som value, bliver i redis db i 10 min
+                r.set(route, full_route_string, 30) #cache i redis db med den søgte route som key og selve routen som value, bliver i redis db i 10 min
 
             else:
                 output = "No route exists"
