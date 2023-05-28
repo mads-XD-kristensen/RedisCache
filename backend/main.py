@@ -1,12 +1,11 @@
 import json
+from contextlib import asynccontextmanager
 
 import mongodb
 import redis
 from fastapi import FastAPI
 from geojson import Feature, FeatureCollection, LineString
-from neo4j import GraphDatabase as gd
-
-app = FastAPI()
+from neo4j import Driver, GraphDatabase
 
 NEOURL = "neo4j://localhost:7687"
 NEOUSER = "neo4j"
@@ -18,6 +17,20 @@ MATCH p = allshortestpaths((a)-[*]-(b))
 WHERE NONE (x IN RELATIONSHIPS(p) WHERE type(x)="OPERATES")  
 RETURN p  
 LIMIT 10  """
+
+driver: Driver = None
+
+# lifespan to open and close the neo4j driver
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global driver
+    driver = GraphDatabase.driver(NEOURL, auth=(NEOUSER, NEOPASS))
+    driver.verify_connectivity()
+    # app.state.driver = driver
+    yield
+    driver.close()
+
+app = FastAPI(lifespan=lifespan)
 
 def path_to_geojson(path):
     lines = FeatureCollection([
@@ -49,22 +62,19 @@ def search(start: str, stop: str):
     if output: #Hvis redis allerede har en cachet route
         return json.loads(output) #Returner cached route
     else:
-        with gd.driver(NEOURL, auth=(NEOUSER, NEOPASS)) as driver: #opretter forbindelse til neo4j db
-            driver.verify_connectivity()
-
-            records, summary, keys = driver.execute_query(
-                "MATCH (a:Stop), (b:Stop) WHERE a.id = $start AND b.id = $stop WITH a,b MATCH p = allshortestpaths((a)-[*]-(b)) WHERE NONE (x IN relationships(p) WHERE type(x)='OPERATES') AND NONE (s IN nodes(p) WHERE 'Trip' IN labels(s)) RETURN p LIMIT 1",
-                start=start, stop=stop)
+        records, summary, keys = driver.execute_query(
+            "MATCH (a:Stop), (b:Stop) WHERE a.id = $start AND b.id = $stop WITH a,b MATCH p = allshortestpaths((a)-[*]-(b)) WHERE NONE (x IN relationships(p) WHERE type(x)='OPERATES') AND NONE (s IN nodes(p) WHERE 'Trip' IN labels(s)) RETURN p LIMIT 1",
+            start=start, stop=stop)
+        
+        if len(records) > 0: #Tjekker om der kommer noget tilbage fra neo4j, hvis der ikke kommer noget er der ikke nogen rute
+            #Siden der er en limit 1 på cypher query så kommer der max 1 record
+            path = records[0]['p'] #Henter path fra record
+            output = path_to_geojson(path) #Konverterer path til geojson
             
-            if len(records) > 0: #Tjekker om der kommer noget tilbage fra neo4j, hvis der ikke kommer noget er der ikke nogen rute
-                #Siden der er en limit 1 på cypher query så kommer der max 1 record
-                path = records[0]['p'] #Henter path fra record
-                output = path_to_geojson(path) #Konverterer path til geojson
-                
-                r.set(route, json.dumps(output), 600) #cache i redis db med den søgte route som key og selve routen som value, bliver i redis db i 10 min
-                return output
-            else:
-                return None
+            r.set(route, json.dumps(output), 600) #cache i redis db med den søgte route som key og selve routen som value, bliver i redis db i 10 min
+            return output
+        else:
+            return None
 
 @app.get("/subway_stops")
 def all_subways():
