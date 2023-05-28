@@ -1,6 +1,5 @@
 fastapi
 uvicorn
 redis
-graphdatascience
-pandas
+geojson
 neo4j
