@@ -67,5 +67,25 @@ def search(start: str, stop: str):
                 return None
 
 @app.get("/subway_stops")
-def subways():
+def all_subways():
     return mongodb.subway_stops.get_all()
+
+@app.get("/subway_stops/near")
+def subways_near(lat: float, lon: float, max_distance: int = 1000, limit: int = 10):
+    return mongodb.subway_stops.get_near([lon, lat], max_distance, limit)
+
+@app.get("/subway_lines")
+def subway_lines():
+    return mongodb.subway_lines.get_all()
+
+@app.get("/attractions")
+def all_attractions():
+    return mongodb.attractions.get_all()
+
+@app.get("/attractions/near")
+def attractions_near(lat: float, lon: float, max_distance: int = 1000):
+    return mongodb.attractions.get_near([lon, lat], max_distance)
+
+@app.get("/attractions/{name}")
+def attractions_like(name: str):
+    return mongodb.attractions.get_like(name)
