@@ -1,5 +1,6 @@
 import json
 
+import mongodb
 import redis
 from fastapi import FastAPI
 from geojson import Feature, FeatureCollection, LineString
@@ -64,3 +65,7 @@ def search(start: str, stop: str):
                 return output
             else:
                 return None
+
+@app.get("/subway_stops")
+def subways():
+    return mongodb.subway_stops.get_all()
