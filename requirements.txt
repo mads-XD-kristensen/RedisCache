@@ -3,3 +3,4 @@ uvicorn
 redis
 geojson
 neo4j
+pymongo
