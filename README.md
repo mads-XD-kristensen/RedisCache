@@ -9,3 +9,6 @@ Next go to backend `cd backend` and run `uvicorn main:app --reload`
 The api is now running and you should be able to test it on `http://127.0.0.1:8000/`
 
 Make sure that neo4j database and redis database is running and you might need to change user and password for neo4j driver in main.py
+
+Firt-time-setup: For redis use `docker-compose up -d` and a docker container should start with redis installed
+
