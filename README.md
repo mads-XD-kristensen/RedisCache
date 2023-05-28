@@ -1,6 +1,6 @@
 # RedisCache
 
-Firt-time-setup: For redis use `docker-compose up -d` and a docker container should start with redis installed
+First-time-setup: For redis use `docker-compose up -d` and a docker container should start with redis installed
 
 To start api use pip to install everything in requirements.txt
 
